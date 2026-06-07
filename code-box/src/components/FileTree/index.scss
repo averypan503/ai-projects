@@ -1,0 +1,166 @@
+$bg-hover: #2a2d2e;
+$bg-active: #094771;
+$text-primary: #cccccc;
+$text-secondary: #858585;
+$text-active: #ffffff;
+$border-color: #3c3c3c;
+
+.file-tree {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #252526;
+}
+
+.file-tree__header {
+  padding: 12px;
+  color: $text-secondary;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.file-tree__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 5px;
+
+    &:hover {
+      background: #4a4a4a;
+    }
+  }
+}
+
+.file-tree__root-folder {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-weight: 600;
+  color: #4ec9b0;
+  font-size: 12px;
+  border-bottom: 1px solid #3c3c3c;
+  margin-bottom: 4px;
+}
+
+.file-tree__root-icon {
+  margin-right: 4px;
+}
+
+.file-tree__root-name {
+  flex: 1;
+}
+
+.file-tree__item {
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  font-size: 13px;
+  color: $text-primary;
+
+  &:hover {
+    background-color: $bg-hover;
+  }
+
+  &--active {
+    background-color: $bg-active;
+    color: $text-active;
+  }
+}
+
+.file-tree__item--folder {
+  font-weight: 500;
+}
+
+.file-tree__expand-icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: $text-secondary;
+  transition: transform 0.2s;
+
+  &--expanded {
+    transform: rotate(90deg);
+  }
+}
+
+.file-tree__icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.file-tree__name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tree__actions {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.6;
+
+  .file-tree__item:hover & {
+    display: flex;
+  }
+}
+
+.file-tree__action-btn {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: transparent;
+  border: none;
+  color: $text-secondary;
+  cursor: pointer;
+  font-size: 12px;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: $text-primary;
+  }
+}
+
+.file-tree__children {
+  padding-left: 16px;
+}
+
+.file-tree__input {
+  flex: 1;
+  background-color: #1e1e1e;
+  border: 1px solid #007acc;
+  border-radius: 2px;
+  color: $text-primary;
+  font-size: 13px;
+  padding: 2px 4px;
+  outline: none;
+  margin-left: 22px;
+}

@@ -1,0 +1,171 @@
+$bg-header: #252526;
+$bg-content: #1e1e1e;
+$border-color: #3c3c3c;
+$text-primary: #cccccc;
+$text-secondary: #858585;
+$text-info: #569cd6;
+$text-success: #4ec9b0;
+$text-warning: #dcdcaa;
+$text-error: #f14c4c;
+
+.console {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: $bg-content;
+  border-top: 1px solid $border-color;
+  transition: height 0.2s ease;
+
+  &--visible {
+    height: 100%;
+  }
+
+  &--hidden {
+    height: 24px;
+
+    .console__content {
+      display: none;
+    }
+  }
+}
+
+.console__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 24px;
+  background-color: $bg-header;
+  color: $text-secondary;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background-color: darken($bg-header, 2%);
+  }
+}
+
+.console__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.console__icon {
+  font-size: 11px;
+}
+
+.console__count {
+  color: $text-secondary;
+  font-size: 11px;
+}
+
+.console__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.console__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 18px;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  color: $text-secondary;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: $text-primary;
+  }
+}
+
+.console__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: $bg-content;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $border-color;
+    border-radius: 4px;
+
+    &:hover {
+      background-color: darken($border-color, 5%);
+    }
+  }
+}
+
+.console__empty {
+  color: $text-secondary;
+  font-style: italic;
+}
+
+.console__log {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+
+  &--info {
+    .console__log-icon,
+    .console__message {
+      color: $text-info;
+    }
+  }
+
+  &--success {
+    .console__log-icon,
+    .console__message {
+      color: $text-success;
+    }
+  }
+
+  &--warning {
+    .console__log-icon,
+    .console__message {
+      color: $text-warning;
+    }
+  }
+
+  &--error {
+    .console__log-icon,
+    .console__message {
+      color: $text-error;
+    }
+  }
+}
+
+.console__time {
+  color: $text-secondary;
+  font-size: 11px;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.console__log-icon {
+  font-size: 11px;
+  min-width: 16px;
+  flex-shrink: 0;
+}
+
+.console__message {
+  flex: 1;
+  word-break: break-all;
+}
