@@ -141,11 +141,7 @@ function Editor() {
     }
   }, [activeFile, dispatch]);
 
-  useEffect(() => {
-    if (activeFile) {
-      dispatch(addLog({ type: 'info', message: `Editing file: ${activeFile.name}` }));
-    }
-  }, [activeFile, dispatch]);
+  // 文件编辑日志已在 FileTree 中记录，此处不再重复
 
   if (!activeFile) {
     return (

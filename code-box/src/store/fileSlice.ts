@@ -1,5 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export const safePathToId = (path: string): string => {
+  return btoa(encodeURIComponent(path));
+};
+
 export interface File {
   id: string;
   name: string;
@@ -18,43 +22,6 @@ export interface FileState {
   isLoadedFromLocal: boolean;
 }
 
-const defaultFiles: File[] = [
-  {
-    id: '1',
-    name: 'index.html',
-    path: '/index.html',
-    content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>CodeBox</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <div id="app"></div>\n  <script src="app.js"></script>\n</body>\n</html>',
-    type: 'file',
-    isLoaded: true,
-  },
-  {
-    id: '2',
-    name: 'src',
-    path: '/src',
-    content: '',
-    type: 'folder',
-    children: [
-      {
-        id: '2-1',
-        name: 'app.js',
-        path: '/src/app.js',
-        content: '// CodeBox Application\nconst app = {\n  name: "CodeBox",\n  version: "1.0.0",\n  description: "A lightweight web-based IDE",\n};\n\nconsole.log("Welcome to CodeBox!");\n\nfunction greet(name) {\n  return `Hello, ${name}!`;\n}\n\nexport default app;',
-        type: 'file',
-        isLoaded: true,
-      },
-      {
-        id: '2-2',
-        name: 'style.css',
-        path: '/src/style.css',
-        content: '* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n\nbody {\n  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;\n  background-color: #1e1e1e;\n  color: #d4d4d4;\n  min-height: 100vh;\n}\n\n#app {\n  padding: 20px;\n}',
-        type: 'file',
-        isLoaded: true,
-      },
-    ],
-    isLoaded: true,
-  },
-];
-
 function buildFileMap(files: File[]): Record<string, File> {
   const map: Record<string, File> = {};
   const build = (items: File[]) => {
@@ -70,8 +37,8 @@ function buildFileMap(files: File[]): Record<string, File> {
 }
 
 const initialState: FileState = {
-  tree: defaultFiles,
-  files: buildFileMap(defaultFiles),
+  tree: [],
+  files: {},
   isLoadedFromLocal: false,
 };
 
@@ -79,12 +46,19 @@ const fileSlice = createSlice({
   name: 'files',
   initialState,
   reducers: {
+    initializeEmptyState: (state) => {
+      state.tree = [];
+      state.files = {};
+      state.isLoadedFromLocal = false;
+    },
+
     addFile: (state, action: PayloadAction<{ parentId?: string; name: string; content?: string; fileHandle?: FileSystemFileHandle }>) => {
       const { parentId, name, content = '', fileHandle } = action.payload;
+      const filePath = parentId ? `${state.files[parentId]?.path || ''}/${name}` : `/${name}`;
       const newFile: File = {
-        id: `file-${Date.now()}`,
+        id: safePathToId(filePath),
         name,
-        path: parentId ? `${state.files[parentId]?.path || ''}/${name}` : `/${name}`,
+        path: filePath,
         content,
         type: 'file',
         fileHandle,
@@ -101,10 +75,11 @@ const fileSlice = createSlice({
 
     addFolder: (state, action: PayloadAction<{ parentId?: string; name: string; directoryHandle?: FileSystemDirectoryHandle }>) => {
       const { parentId, name, directoryHandle } = action.payload;
+      const folderPath = parentId ? `${state.files[parentId]?.path || ''}/${name}` : `/${name}`;
       const newFolder: File = {
-        id: `folder-${Date.now()}`,
+        id: safePathToId(folderPath),
         name,
-        path: parentId ? `${state.files[parentId]?.path || ''}/${name}` : `/${name}`,
+        path: folderPath,
         content: '',
         type: 'folder',
         children: [],
@@ -157,12 +132,9 @@ const fileSlice = createSlice({
         state.files[id].name = name;
         state.files[id].path = path;
 
-        // 递归更新所有子节点路径和文件映射
         const updateChildPaths = (children: File[], oldParentPath: string, newParentPath: string) => {
           children.forEach((child) => {
-            // 更新子节点路径
             child.path = child.path.replace(oldParentPath, newParentPath);
-            // 更新文件映射中的子节点
             if (state.files[child.id]) {
               state.files[child.id].path = child.path;
             }
@@ -176,7 +148,6 @@ const fileSlice = createSlice({
           updateChildPaths(state.files[id].children, oldPath, path);
         }
 
-        // 更新树结构中的节点
         const updateTree = (items: File[]): void => {
           items.forEach((item) => {
             if (item.id === id) {
@@ -201,6 +172,8 @@ const fileSlice = createSlice({
 
     loadFolderChildren: (state, action: PayloadAction<{ folderId: string; children: File[] }>) => {
       const { folderId, children } = action.payload;
+
+      // 1. 更新 state.files 中的 folder
       const folder = state.files[folderId];
       if (folder && folder.type === 'folder') {
         folder.children = children;
@@ -209,19 +182,50 @@ const fileSlice = createSlice({
           state.files[child.id] = child;
         });
       }
+
+      // 2. 同时更新 state.tree 中的 folder（递归遍历 tree，确保同步更新）
+      const updateInTree = (items: File[]): void => {
+        for (const item of items) {
+          if (item.id === folderId) {
+            item.children = children;
+            item.isLoaded = true;
+            return;
+          }
+          if (item.children) {
+            updateInTree(item.children);
+          }
+        }
+      };
+      updateInTree(state.tree);
     },
 
     setFolderLoaded: (state, action: PayloadAction<{ folderId: string }>) => {
       const { folderId } = action.payload;
+
+      // 1. 更新 state.files 中的 folder
       const folder = state.files[folderId];
       if (folder && folder.type === 'folder') {
         folder.isLoaded = true;
       }
+
+      // 2. 同时更新 state.tree 中的 folder（递归遍历 tree，确保同步更新）
+      const updateInTree = (items: File[]): void => {
+        for (const item of items) {
+          if (item.id === folderId) {
+            item.isLoaded = true;
+            return;
+          }
+          if (item.children) {
+            updateInTree(item.children);
+          }
+        }
+      };
+      updateInTree(state.tree);
     },
 
     clearLocalFiles: (state) => {
-      state.tree = defaultFiles;
-      state.files = buildFileMap(defaultFiles);
+      state.tree = [];
+      state.files = {};
       state.isLoadedFromLocal = false;
     },
 
@@ -231,6 +235,20 @@ const fileSlice = createSlice({
   },
 });
 
-export const { addFile, addFolder, deleteFile, updateFileContent, updateFileName, setFiles, loadLocalFiles, clearLocalFiles, loadFolderChildren, setFolderLoaded } = fileSlice.actions;
+export const {
+  initializeEmptyState,
+  setRootName,
+  clearRootRecord,
+  addFile,
+  addFolder,
+  deleteFile,
+  updateFileContent,
+  updateFileName,
+  setFiles,
+  loadLocalFiles,
+  clearLocalFiles,
+  loadFolderChildren,
+  setFolderLoaded,
+} = fileSlice.actions;
 
 export default fileSlice.reducer;

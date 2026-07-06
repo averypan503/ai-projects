@@ -2,45 +2,42 @@ import { useState, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addLog } from '@/store/consoleSlice';
 import { openTab, closeAllTabs } from '@/store/tabSlice';
-import { loadLocalFiles, clearLocalFiles, type File } from '@/store/fileSlice';
+import { loadLocalFiles, initializeEmptyState, type File } from '@/store/fileSlice';
 import './index.scss';
 
 export const rootDirectoryHandleRef = { current: null as FileSystemDirectoryHandle | null };
 
-async function loadDirectoryLevel(directoryHandle: FileSystemDirectoryHandle, parentPath: string = ''): Promise<File[]> {
-  const files: File[] = [];
+const safePathToId = (path: string): string => {
+  return btoa(encodeURIComponent(path));
+};
+
+const loadRootDirectory = async (directoryHandle: FileSystemDirectoryHandle) => {
+  const rootName = directoryHandle.name;
+  const firstLevelFiles: File[] = [];
 
   for await (const handle of directoryHandle.values()) {
-    const name = handle.name;
-    const currentPath = parentPath === '' ? name : `${parentPath}/${name}`;
-
-    if (handle.kind === 'file') {
-      files.push({
-        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name,
-        path: `/${currentPath}`,
-        content: '',
-        type: 'file',
-        isLoaded: false,
-      });
-    } else if (handle.kind === 'directory') {
-      files.push({
-        id: `folder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name,
-        path: `/${currentPath}`,
-        content: '',
-        type: 'folder',
-        children: [],
-        isLoaded: false,
-      });
-    }
+    const fullPath = `/${handle.name}`;
+    const fileId = safePathToId(fullPath);
+    firstLevelFiles.push({
+      id: fileId,
+      name: handle.name,
+      path: fullPath,
+      content: '',
+      type: handle.kind === 'file' ? 'file' : 'folder',
+      children: handle.kind === 'directory' ? [] : undefined,
+      isLoaded: false,
+      fileHandle: handle.kind === 'file' ? handle : undefined,
+      directoryHandle: handle.kind === 'directory' ? handle : undefined,
+    });
   }
 
-  return files.sort((a, b) => {
+  firstLevelFiles.sort((a, b) => {
     if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
-    return a.name.localeCompare(b.name);
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
   });
-}
+
+  return { firstLevelFiles, rootName };
+};
 
 function buildFileMapFromTree(files: File[]): Record<string, File> {
   const map: Record<string, File> = {};
@@ -58,7 +55,7 @@ function buildFileMapFromTree(files: File[]): Record<string, File> {
 
 function TopBar() {
   const dispatch = useAppDispatch();
-  const isLoadedFromLocal = useAppSelector((state) => state.files.isLoadedFromLocal);
+  const fileTree = useAppSelector((state) => state.files.tree);
   const [showMenu, setShowMenu] = useState(false);
 
   const handleOpenFile = useCallback(async () => {
@@ -70,11 +67,13 @@ function TopBar() {
 
       const file = await fileHandle.getFile();
       const content = await file.text();
+      const filePath = `/${fileHandle.name}`;
+      const fileId = safePathToId(filePath);
 
       const newFile: File = {
-        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: fileId,
         name: fileHandle.name,
-        path: `/${fileHandle.name}`,
+        path: filePath,
         content,
         type: 'file',
         isLoaded: true,
@@ -87,9 +86,7 @@ function TopBar() {
       dispatch(openTab({ fileId: newFile.id, fileName: newFile.name }));
       dispatch(addLog({ type: 'success', message: `Opened file: ${fileHandle.name}` }));
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        dispatch(addLog({ type: 'info', message: 'File selection cancelled' }));
-      } else {
+      if (!(error instanceof Error && error.name === 'AbortError')) {
         dispatch(addLog({ type: 'error', message: `Failed to open file: ${error}` }));
       }
     }
@@ -104,17 +101,16 @@ function TopBar() {
 
       rootDirectoryHandleRef.current = directoryHandle;
 
-      const tree = await loadDirectoryLevel(directoryHandle, '');
-      const filesMap = buildFileMapFromTree(tree);
+      const { firstLevelFiles, rootName } = await loadRootDirectory(directoryHandle);
+      const filesMap = buildFileMapFromTree(firstLevelFiles);
 
       dispatch(closeAllTabs());
-      dispatch(loadLocalFiles({ tree, files: filesMap }));
-      dispatch(addLog({ type: 'success', message: `Successfully loaded folder: ${directoryHandle.name}` }));
+      dispatch(loadLocalFiles({ tree: firstLevelFiles, files: filesMap }));
+      dispatch(addLog({ type: 'success', message: `Successfully loaded folder: ${rootName}` }));
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        dispatch(addLog({ type: 'info', message: 'Folder selection cancelled' }));
-      } else {
+      if (!(error instanceof Error && error.name === 'AbortError')) {
         dispatch(addLog({ type: 'error', message: `Failed to open folder: ${error}` }));
+        console.error(error);
       }
     }
   }, [dispatch]);
@@ -123,8 +119,8 @@ function TopBar() {
     setShowMenu(false);
     rootDirectoryHandleRef.current = null;
     dispatch(closeAllTabs());
-    dispatch(clearLocalFiles());
-    dispatch(addLog({ type: 'info', message: 'Reset to default files' }));
+    dispatch(initializeEmptyState());
+    dispatch(addLog({ type: 'info', message: 'Reset to empty state' }));
   }, [dispatch]);
 
   const handleMenuClick = useCallback((e: React.MouseEvent) => {
@@ -167,9 +163,9 @@ function TopBar() {
             <button className="top-bar__menu-item" onClick={handleOpenFolder}>
               📂 Open Folder
             </button>
-            {isLoadedFromLocal && (
+            {fileTree.length > 0 && (
               <button className="top-bar__menu-item top-bar__menu-item--secondary" onClick={handleReset}>
-                ↺ Reset to Default
+                ↺ Reset
               </button>
             )}
           </div>
@@ -180,3 +176,4 @@ function TopBar() {
 }
 
 export default TopBar;
+export { loadRootDirectory, buildFileMapFromTree };

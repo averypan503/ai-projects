@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { addFile, addFolder, deleteFile, updateFileName, loadLocalFiles, loadFolderChildren, setFolderLoaded, type File } from '@/store/fileSlice';
+import { addFile, addFolder, deleteFile, updateFileName, loadLocalFiles, loadFolderChildren, setFolderLoaded, safePathToId, type File } from '@/store/fileSlice';
 import { openTab, setActiveTab, closeTabByFileId, updateTabFileName, closeAllTabs } from '@/store/tabSlice';
 import { addLog } from '@/store/consoleSlice';
 import { rootDirectoryHandleRef } from '@/components/TopBar';
@@ -73,22 +73,26 @@ function FileTreeItem({ file, depth = 0 }: FileTreeItemProps) {
 
             if (handle.kind === 'file') {
               children.push({
-                id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                id: safePathToId(currentPath),
                 name,
                 path: currentPath,
                 content: '',
                 type: 'file',
                 isLoaded: false,
+                fileHandle: handle,
+                directoryHandle: undefined,
               });
             } else if (handle.kind === 'directory') {
               children.push({
-                id: `folder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                id: safePathToId(currentPath),
                 name,
                 path: currentPath,
                 content: '',
                 type: 'folder',
                 children: [],
                 isLoaded: false,
+                fileHandle: undefined,
+                directoryHandle: handle,
               });
             }
           }
@@ -103,12 +107,9 @@ function FileTreeItem({ file, depth = 0 }: FileTreeItemProps) {
         } catch (error) {
           dispatch(addLog({ type: 'error', message: `Failed to load folder: ${error}` }));
         }
-      } else if (file.children && file.children.length > 0) {
-        dispatch(addLog({ type: 'info', message: `Loaded folder: ${file.name}` }));
-        dispatch(loadFolderChildren({ folderId: file.id, children: file.children }));
       }
       dispatch(setFolderLoaded({ folderId: file.id }));
-      setIsExpanded(!isExpanded);
+      setIsExpanded((prev) => !prev);
     }
   }, [file.id, file.name, file.type, file.isLoaded, file.children, dispatch, getDirectoryHandleByPath]);
 
@@ -332,9 +333,11 @@ function FileTreeItem({ file, depth = 0 }: FileTreeItemProps) {
         )}
       </div>
 
-      {file.type === 'folder' && isExpanded && file.children?.length ? (
+      {file.type === 'folder' && isExpanded && file.children ? (
         <div className="file-tree__children">
-          {file.children.map((child) => <FileTreeItem key={child.id} file={child} depth={depth + 1} />)}
+          {file.children.length > 0 ? (
+            file.children.map((child) => <FileTreeItem key={child.id} file={child} depth={depth + 1} />)
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -366,13 +369,15 @@ function FileTree() {
       const tree: File[] = [];
       for await (const handle of directoryHandle.values()) {
         tree.push({
-          id: `${handle.kind}-${Date.now()}`,
+          id: safePathToId(`/${handle.name}`),
           name: handle.name,
           path: `/${handle.name}`,
           content: '',
           type: handle.kind === 'file' ? 'file' : 'folder',
           children: handle.kind === 'directory' ? [] : undefined,
           isLoaded: false,
+          fileHandle: handle.kind === 'file' ? handle : undefined,
+          directoryHandle: handle.kind === 'directory' ? handle : undefined,
         });
       }
 
@@ -395,13 +400,15 @@ function FileTree() {
       const tree: File[] = [];
       for await (const handle of root.values()) {
         tree.push({
-          id: `${handle.kind}-${Date.now()}`,
+          id: safePathToId(`/${handle.name}`),
           name: handle.name,
           path: `/${handle.name}`,
           content: '',
           type: handle.kind === 'file' ? 'file' : 'folder',
           children: handle.kind === 'directory' ? [] : undefined,
           isLoaded: false,
+          fileHandle: handle.kind === 'file' ? handle : undefined,
+          directoryHandle: handle.kind === 'directory' ? handle : undefined,
         });
       }
       tree.sort((a, b) => (a.type !== b.type ? a.type === 'folder' ? -1 : 1 : a.name.localeCompare(b.name)));
@@ -464,7 +471,10 @@ function FileTree() {
       </div>
       <div className="file-tree__content">
         {fileTree.length === 0 ? (
-          <div className="file-tree__item">No files</div>
+          <div className="file-tree__empty">
+            <div className="file-tree__empty-text">暂无文件</div>
+            <div className="file-tree__empty-hint">点击右上角按钮打开本地文件夹</div>
+          </div>
         ) : (
           fileTree.map((file) => <FileTreeItem key={file.id} file={file} />)
         )}

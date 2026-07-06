@@ -20,10 +20,8 @@ function TabItem({ tab, isActive }: TabItemProps) {
 
   const handleClose = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (tabs.length > 1) {
-      dispatch(closeTab(tab.id));
-      dispatch(addLog({ type: 'info', message: `Closed file: ${tab.fileName}` }));
-    }
+    dispatch(closeTab(tab.id));
+    dispatch(addLog({ type: 'info', message: `Closed file: ${tab.fileName}` }));
   }, [tab.id, tab.fileName, tabs.length, dispatch]);
 
   const getFileIcon = (name: string): string => {
@@ -63,13 +61,7 @@ function Tabs() {
   const activeTabId = useAppSelector((state) => state.tabs.activeTabId);
 
   if (tabs.length === 0) {
-    return (
-      <div className="tabs">
-        <div className="tabs__empty">
-          No files open. Click a file in Explorer to open it.
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

@@ -43,6 +43,10 @@ const consoleSlice = createSlice({
         timestamp: new Date(),
       };
       state.logs.push(newLog);
+      // 最多保留 100 条日志
+      if (state.logs.length > 100) {
+        state.logs.shift();
+      }
     },
 
     clearLogs: (state) => {
