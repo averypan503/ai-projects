@@ -1,9 +1,7 @@
+@use '../../styles/variables' as *;
+
 $bg-hover: #2a2d2e;
 $bg-active: #094771;
-$text-primary: #cccccc;
-$text-secondary: #858585;
-$text-active: #ffffff;
-$border-color: #3c3c3c;
 
 .file-tree {
   display: flex;

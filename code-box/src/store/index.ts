@@ -32,8 +32,10 @@ const saveState = (state: RootState) => {
   try {
     const persistData = {
       ui: {
-        sidebarWidth: state.ui.sidebarWidth,
-        consoleHeight: state.ui.consoleHeight,
+        sidebarWidth: Math.max(200, Math.min(450, state.ui.sidebarWidth)),
+        consoleHeight: Math.max(80, Math.min(400, state.ui.consoleHeight)),
+        rightPanelWidth: Math.max(200, Math.min(600, state.ui.rightPanelWidth)),
+        rightPanelCollapsed: state.ui.rightPanelCollapsed,
       },
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persistData));
@@ -44,6 +46,13 @@ const saveState = (state: RootState) => {
 
 const savedState = loadState();
 
+const clampSavedUI = (ui: any) => ({
+  sidebarWidth: Math.max(200, Math.min(450, Number(ui?.sidebarWidth) ?? 250)),
+  consoleHeight: Math.max(80, Math.min(400, Number(ui?.consoleHeight) ?? 200)),
+  rightPanelWidth: Math.max(200, Math.min(600, Number(ui?.rightPanelWidth) ?? 320)),
+  rightPanelCollapsed: Boolean(ui?.rightPanelCollapsed ?? false),
+});
+
 const preloadedState = savedState ? {
   files: {
     tree: [],
@@ -52,7 +61,7 @@ const preloadedState = savedState ? {
   },
   tabs: { tabs: [], activeTabId: null },
   console: { logs: [], isVisible: true },
-  ui: savedState.ui,
+  ui: clampSavedUI(savedState.ui),
 } : undefined;
 
 const store = configureStore({

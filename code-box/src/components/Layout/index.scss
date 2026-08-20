@@ -1,11 +1,4 @@
-$bg-primary: #1e1e1e;
-$bg-secondary: #252526;
-$bg-tertiary: #2d2d30;
-$border-color: #3c3c3c;
-$accent-color: #007acc;
-$tabs-height: 35px;
-$console-height: 200px;
-$top-bar-height: 36px;
+@use '../../styles/variables' as *;
 
 .ide-layout {
   display: flex;
@@ -25,6 +18,8 @@ $top-bar-height: 36px;
   display: flex;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
+  min-width: 0;
 }
 
 .ide-layout__sidebar {
@@ -89,6 +84,7 @@ $top-bar-height: 36px;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .ide-layout__tabs {
@@ -160,4 +156,129 @@ $top-bar-height: 36px;
   border-top: 1px solid $border-color;
   overflow: hidden;
   transition: height 0.05s ease-out;
+}
+
+.ide-layout__right-panel-resizer {
+  width: 6px;
+  cursor: col-resize;
+  background-color: transparent;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  user-select: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: $border-color;
+    transform: translateX(-50%);
+    transition: background-color 0.15s;
+  }
+
+  &:hover {
+    &::before {
+      background-color: #666;
+    }
+  }
+
+  &--active {
+    z-index: 3;
+
+    &::before {
+      width: 3px;
+      background-color: $accent-color;
+      box-shadow: 0 0 8px rgba(0, 122, 204, 0.5);
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 100vw;
+      background-color: rgba(0, 122, 204, 0.1);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+  }
+
+  &--collapsed {
+    width: 4px;
+
+    &::before {
+      width: 2px;
+      background-color: $accent-color;
+    }
+
+    &::after {
+      content: '▶';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 9px;
+      color: $accent-color;
+      pointer-events: none;
+    }
+
+    &:hover {
+      &::before {
+        background-color: $accent-color;
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+.ide-layout__right-panel {
+  background-color: $bg-secondary;
+  border-left: 1px solid $border-color;
+  overflow: hidden !important;
+  transition: width 0.15s ease-out, flex-basis 0.15s ease-out, max-width 0.15s ease-out;
+  position: relative;
+  flex-basis: auto;
+
+  &:not(&--collapsed) {
+    max-width: min(600px, 90vw) !important;
+  }
+
+  &--collapsed {
+    max-width: 40px !important;
+    overflow: hidden;
+    cursor: pointer;
+    border-left-color: $border-color;
+    background-color: $bg-primary;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    &::after {
+      content: '◀';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      color: $accent-color;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    > * {
+      display: none !important;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
 }

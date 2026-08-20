@@ -1,12 +1,4 @@
-$bg-header: #252526;
-$bg-content: #1e1e1e;
-$border-color: #3c3c3c;
-$text-primary: #cccccc;
-$text-secondary: #858585;
-$text-info: #569cd6;
-$text-success: #4ec9b0;
-$text-warning: #dcdcaa;
-$text-error: #f14c4c;
+@use '../../styles/variables' as *;
 
 .console {
   display: flex;

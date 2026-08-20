@@ -1,10 +1,8 @@
+@use '../../styles/variables' as *;
+
 $bg-active: #1e1e1e;
 $bg-inactive: #2d2d30;
 $bg-hover: #3c3c3c;
-$border-color: #3c3c3c;
-$border-active: #007acc;
-$text-active: #ffffff;
-$text-inactive: #858585;
 
 .tabs {
   display: flex;

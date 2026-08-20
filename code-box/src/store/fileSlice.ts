@@ -22,20 +22,6 @@ export interface FileState {
   isLoadedFromLocal: boolean;
 }
 
-function buildFileMap(files: File[]): Record<string, File> {
-  const map: Record<string, File> = {};
-  const build = (items: File[]) => {
-    items.forEach((file) => {
-      map[file.id] = file;
-      if (file.children) {
-        build(file.children);
-      }
-    });
-  };
-  build(files);
-  return map;
-}
-
 const initialState: FileState = {
   tree: [],
   files: {},
@@ -237,8 +223,6 @@ const fileSlice = createSlice({
 
 export const {
   initializeEmptyState,
-  setRootName,
-  clearRootRecord,
   addFile,
   addFolder,
   deleteFile,

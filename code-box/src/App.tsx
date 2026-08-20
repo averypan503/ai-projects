@@ -7,6 +7,7 @@ import Tabs from '@/components/Tabs';
 import Editor from '@/components/Editor';
 import Console from '@/components/Console';
 import TopBar from '@/components/TopBar';
+import AIChat from '@/components/AIChat';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -22,6 +23,7 @@ function App() {
       tabs={<Tabs />}
       editor={<Editor />}
       console={<Console />}
+      rightPanel={<AIChat />}
     />
   );
 }
