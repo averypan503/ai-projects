@@ -327,4 +327,281 @@ $bg-error: #4a2d2d;
     color: $text-secondary;
     cursor: not-allowed;
   }
+
+  &--stop {
+    background-color: #c0392b;
+
+    &:hover:not(:disabled) {
+      background-color: #e74c3c;
+    }
+  }
+}
+
+.ai-chat__cursor {
+  display: inline-block;
+  margin-left: 2px;
+  font-weight: 600;
+  color: $accent-color;
+  animation: ai-chat-blink-cursor 1s steps(2, start) infinite;
+  vertical-align: baseline;
+}
+
+@keyframes ai-chat-blink-cursor {
+  to {
+    visibility: hidden;
+  }
+}
+
+// ========== Markdown 渲染样式（适配 CodeBox 暗色主题） ==========
+.markdown-body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  h1, h2, h3, h4, h5, h6 {
+    margin: 14px 0 8px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.3;
+  }
+  h1 { font-size: 1.5em; border-bottom: 1px solid #3a3a3a; padding-bottom: 6px; }
+  h2 { font-size: 1.3em; border-bottom: 1px solid #333; padding-bottom: 4px; }
+  h3 { font-size: 1.15em; }
+  h4 { font-size: 1.05em; }
+
+  p { margin: 6px 0; }
+
+  ul, ol {
+    margin: 6px 0;
+    padding-left: 24px;
+
+    li {
+      margin: 3px 0;
+
+      input[type="checkbox"] {
+        margin-right: 6px;
+      }
+    }
+  }
+
+  a {
+    color: #4fc3f7;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+      color: #81d4fa;
+    }
+  }
+
+  blockquote {
+    margin: 8px 0;
+    padding: 6px 12px;
+    border-left: 4px solid #555;
+    color: #bbb;
+    background: rgba(255,255,255,0.03);
+    border-radius: 0 4px 4px 0;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #3a3a3a;
+    margin: 14px 0;
+  }
+
+  img {
+    max-width: 100%;
+    border-radius: 4px;
+  }
+
+  strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  em {
+    color: #e0c47a;
+    font-style: italic;
+  }
+
+  del {
+    color: #888;
+    text-decoration: line-through;
+  }
+}
+
+// 行内代码
+.markdown-inline-code {
+  background: #333;
+  color: #f2c97d;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  white-space: nowrap;
+}
+
+// 代码块容器（含复制按钮）
+.markdown-code-block {
+  position: relative;
+  margin: 10px 0;
+  border-radius: 8px;
+  overflow: hidden;
+
+  &__copy {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 2;
+    padding: 4px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    min-width: 52px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ddd;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+    text-align: center;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+  }
+}
+
+// 表格（横向滚动容器）
+.markdown-table-wrap {
+  overflow-x: auto;
+  margin: 10px 0;
+  border-radius: 4px;
+  border: 1px solid #3a3a3a;
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9em;
+    min-width: 100%;
+  }
+
+  th, td {
+    border-bottom: 1px solid #3a3a3a;
+    border-right: 1px solid #333;
+    padding: 6px 10px;
+    text-align: left;
+    white-space: nowrap;
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+
+  thead th {
+    background: #2a2d2e;
+    font-weight: 600;
+    color: #fff;
+    position: sticky;
+    top: 0;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background: rgba(255,255,255,0.02);
+  }
+}
+
+// AI 气泡背景稍微提亮，和 oneDark 代码块背景区分开
+.ai-chat__msg--ai {
+  background-color: #2f3234;
+}
+
+.ai-chat__stream-raw {
+  display: block;
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* ===== StreamingMarkdownLite 流式半渲染样式 ===== */
+.streaming-markdown-lite { pointer-events: none; user-select: text; }
+.streaming-markdown-lite *, .streaming-markdown-lite *::before, .streaming-markdown-lite *::after { pointer-events: auto; }
+
+.streaming-text { display: block; }
+.streaming-line {
+  line-height: 1.75;
+  font-size: 13px;
+  color: #e0e0e0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  padding: 2px 0;
+  white-space: pre-wrap;
+}
+.streaming-line--empty { padding: 0; }
+.streaming-line--h1 { font-size: 20px; font-weight: 700; color: #fff; margin: 14px 0 8px; padding-bottom: 6px; border-bottom: 1px solid #3a3a3a; }
+.streaming-line--h2 { font-size: 17px; font-weight: 700; color: #fff; margin: 12px 0 6px; }
+.streaming-line--h3 { font-size: 15px; font-weight: 600; color: #fff; margin: 10px 0 5px; }
+.streaming-line--h4, .streaming-line--h5, .streaming-line--h6 { font-size: 14px; font-weight: 600; color: #fff; margin: 8px 0 4px; }
+
+.streaming-line--ol, .streaming-line--ul {
+  display: flex;
+  align-items: flex-start;
+  padding-left: 2px;
+}
+.streaming-line__bullet {
+  flex: 0 0 auto;
+  width: 24px;
+  color: #a0a0a0;
+  padding-right: 4px;
+  text-align: right;
+  display: inline-block;
+}
+.streaming-line__content { flex: 1 1 auto; }
+
+/* 流式阶段 fenced 代码块（深色背景套壳，不做语法高亮 —— 高性能低成本） */
+.markdown-code-block--streaming {
+  position: relative;
+  margin: 10px 0;
+  border-radius: 8px;
+  background: #1e1f1c;
+  padding: 34px 16px 12px;
+  border: 1px solid #2a2a2a;
+}
+.markdown-code-block--streaming .markdown-code-block__lang-tag {
+  position: absolute;
+  top: 8px;
+  left: 14px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #8aafaa;
+  background: #262723;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: lowercase;
+}
+.markdown-code-block--streaming .markdown-code-block__pre {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  overflow-x: auto;
+}
+.markdown-code-block--streaming .markdown-code-block__code {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #d0d0c8;
+  white-space: pre;
+  word-break: normal;
 }
